@@ -1,7 +1,6 @@
 package main
 
 import (
-	"database/sql"
 	"encoding/json"
 	"net/http"
 	"time"
@@ -18,7 +17,8 @@ func (cfg *apiConfig) handlerRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type Response struct {
-		Token string `json:"token"`
+		Token        string                `json:"token"`
+		RefreshToken database.RefreshToken `json:"refresh_token"`
 	}
 
 	params := Paramaters{}
@@ -35,18 +35,9 @@ func (cfg *apiConfig) handlerRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := cfg.db.CreateUser(r.Context(), database.CreateUserParams{
-		Name: sql.NullString{
-			String: params.Name,
-			Valid:  true,
-		},
-		Email: sql.NullString{
-			String: params.Email,
-			Valid:  true,
-		},
-		Password: sql.NullString{
-			String: password,
-			Valid:  true,
-		},
+		Name:     params.Name,
+		Email:    params.Email,
+		Password: password,
 	})
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create user", err)
@@ -59,5 +50,20 @@ func (cfg *apiConfig) handlerRegister(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	respondWithJSON(w, http.StatusCreated, Response{Token: token})
+	expirationTime := time.Hour * 24 * 7
+	refreshTokenString, err := auth.GenerateRefreshToken(user.ID, expirationTime)
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't generate refresh token", err)
+	}
+
+	refershToken, err := cfg.db.CreateRefreshToken(r.Context(), database.CreateRefreshTokenParams{
+		UserID:    user.ID,
+		Token:     refreshTokenString,
+		ExpiresAt: time.Now().Add(expirationTime),
+	})
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, "Couldn't create refresh token", err)
+	}
+
+	respondWithJSON(w, http.StatusCreated, Response{Token: token, RefreshToken: refershToken})
 }

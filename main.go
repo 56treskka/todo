@@ -31,6 +31,9 @@ func main() {
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("POST /register", apicfg.handlerRegister)
+	mux.HandleFunc("POST /login", apicfg.handlerLogin)
+	mux.HandleFunc("POST /create-item", apicfg.handlerCreateItem)
+	mux.HandleFunc("POST /update-item/{item_id}", apicfg.handlerUpdateItem)
 
 	server := http.Server{
 		Addr:    ":8080",

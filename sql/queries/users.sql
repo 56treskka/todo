@@ -8,3 +8,6 @@ INSERT INTO users(id, name, email, password, created_at, updated_at) VALUES (
     NOW()
 )
 RETURNING *;
+
+-- name: GetUser :one
+SELECT * FROM users WHERE email = $1;
