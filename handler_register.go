@@ -17,8 +17,8 @@ func (cfg *apiConfig) handlerRegister(w http.ResponseWriter, r *http.Request) {
 	}
 
 	type Response struct {
-		Token        string                `json:"token"`
-		RefreshToken database.RefreshToken `json:"refresh_token"`
+		Token        string `json:"token"`
+		RefreshToken string `json:"refresh_token"`
 	}
 
 	params := Paramaters{}
@@ -65,5 +65,5 @@ func (cfg *apiConfig) handlerRegister(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "Couldn't create refresh token", err)
 	}
 
-	respondWithJSON(w, http.StatusCreated, Response{Token: token, RefreshToken: refershToken})
+	respondWithJSON(w, http.StatusCreated, Response{Token: token, RefreshToken: refershToken.Token})
 }
